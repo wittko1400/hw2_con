@@ -116,7 +116,7 @@ class RandomWalk(Node):
            
 
             if self.odom_x <= 0.95:
-                self.cmd.linear.x = 0.3
+                self.cmd.linear.x = 0.19
                 self.publisher_.publish(self.cmd)
                 self.get_logger().info('Moving')
 
@@ -140,7 +140,7 @@ class RandomWalk(Node):
         if self.fiveMeter == False and self.meter == True:
 
             if self.odom_x <= 4.95 + self.odom_save_x:
-                self.cmd.linear.x = 0.3
+                self.cmd.linear.x = 0.19
                 self.publisher_.publish(self.cmd)
                 self.get_logger().info('Moving')
 
