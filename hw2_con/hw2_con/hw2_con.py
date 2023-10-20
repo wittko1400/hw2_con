@@ -167,7 +167,7 @@ class RandomWalk(Node):
 
         # 10 DEGREE CODE
         
-        #"""
+        """
         # Define the desired angle in radians (10 degrees)
         desired_angle = 0.053
         slow_angle = 0.035
@@ -190,11 +190,11 @@ class RandomWalk(Node):
             self.turtlebot_rotating = False
             self.get_logger().info('Stopped after rotating approximately 10 degrees')
             self.degrees = True
-            #"""
+            """
 
         # 180 DEGREE CODE
 
-        """
+        #"""
         # Define the desired angle in radians (180 degrees)
         # Calculate the desired angle (180 degrees in radians)
           # 180 degrees in radians
@@ -221,7 +221,7 @@ class RandomWalk(Node):
             self.turtlebot_rotating = False
             self.get_logger().info('Stopped after rotating approximately 180 degrees')
             self.degrees = True
-        """
+        #"""
 
         # 360 DEGREE CODE
 
