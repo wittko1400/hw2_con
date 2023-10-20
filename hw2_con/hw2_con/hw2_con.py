@@ -142,7 +142,7 @@ class RandomWalk(Node):
 
         # 5 METER CODE
 
-        #"""
+        """
         if self.odom_x <= 4.6:
             self.cmd.linear.x = 0.2
             self.publisher_.publish(self.cmd)
@@ -163,11 +163,11 @@ class RandomWalk(Node):
             self.get_logger().info('Stopped after moving approximately 5 meter')
             self.meter = True
 
-        #"""
+        """
 
         # 10 DEGREE CODE
         
-        """
+        #"""
         # Define the desired angle in radians (10 degrees)
         desired_angle = 0.053
         slow_angle = 0.035
@@ -190,7 +190,7 @@ class RandomWalk(Node):
             self.turtlebot_rotating = False
             self.get_logger().info('Stopped after rotating approximately 10 degrees')
             self.degrees = True
-            """
+            #"""
 
         # 180 DEGREE CODE
 
