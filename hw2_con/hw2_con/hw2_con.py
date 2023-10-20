@@ -67,7 +67,7 @@ class RandomWalk(Node):
         self.log_file = open(file_name, "w")
         self.log_file.write("Robot Log")
         self.log_file.write(f"Timestamp: {timestamp}\n\n")
-        self.log_file.write("Time (s),X Position (m),Y Position (m)\n")
+        self.log_file.write("Time (s),X Position (m),Y Position (m), Rotate Z (m)\n")
        
        
     def listener_callback1(self, msg1):
@@ -94,14 +94,18 @@ class RandomWalk(Node):
         #fill data to the variables used in timer_callback
         self.odom_x = posx
         self.odom_y = posy
-        self.odom_z = posz
+        
 
         (qx, qy, qz, qw) = (orientation.x, orientation.y, orientation.z, orientation.w)
-        self.log_file.write(f"{posx}, {posy}\n")
+        self.log_file.write(f"{posx}, {posy}, {qz}\n")
+
+        self.odom_z= qz
+
+        # Extract yaw angle using the provided code
 
 
         # Optionally, you can log the position to the console as well
-        self.get_logger().info('self position: {}, {}, {}'.format(posx, posy, posz))
+        self.get_logger().info('self position: {}, {}, {}'.format(posx, posy, qz))
         # similarly for twist message if you need
         self.pose_saved=position
         return None
@@ -112,71 +116,136 @@ class RandomWalk(Node):
             self.turtlebot_moving = False
             return
        
-        if self.meter == False:
+        # 1 METER CODE
            
+        #"""
+        if self.odom_x <= 0.70:
+            self.cmd.linear.x = 0.2
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Moving')
 
-            if self.odom_x <= 0.95:
-                self.cmd.linear.x = 0.19
-                self.publisher_.publish(self.cmd)
-                self.get_logger().info('Moving')
+        if self.odom_x >= 0.71 and self.odom_x <= 0.94:
+            self.cmd.linear.x = 0.1
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Moving')
 
             # Check if you've moved approximately 1 meter
-            if self.odom_x >= 0.95:
+        if self.odom_x >= 0.95:
             # Stop the robot
-                self.cmd.linear.x = 0.0
-                self.cmd.angular.z = 0.0
-                self.publisher_.publish(self.cmd)
-                self.turtlebot_moving = False
-                self.get_logger().info('Stopped after moving approximately 1 meter')
-                self.meter = True
-                self.odom_save_x = self.odom_x
-                self.odom_save_y = self.odom_y
-                self.odom_save_z = self.odom_z
+            self.cmd.linear.x = 0.0
+            self.cmd.angular.z = 0.0
+            self.publisher_.publish(self.cmd)
+            self.turtlebot_moving = False
+            self.get_logger().info('Stopped after moving approximately 1 meter')
+            self.meter = True
+        #"""
 
-                #self.odom_x = 0.0  # Initialize the x position
-                #self.odom_y = 0.0  # Initialize the y position
-                #self.odom_z = 0.0  # Initialize the z position
+        # 5 METER CODE
 
-        if self.fiveMeter == False and self.meter == True:
+        """
+        if self.odom_x <= 4.6:
+            self.cmd.linear.x = 0.2
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Moving')
 
-            if self.odom_x <= 4.95 + self.odom_save_x:
-                self.cmd.linear.x = 0.19
-                self.publisher_.publish(self.cmd)
-                self.get_logger().info('Moving')
+        if self.odom_x >= 4.6 and self.odom_x <= 4.95:
+            self.cmd.linear.x = 0.1
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('slowing to goal')
 
             # Check if you've moved approximately 5 meter
-            if self.odom_x >= 4.95 + self.odom_save_x:
+        if self.odom_x >= 4.95:
             # Stop the robot
-                self.cmd.linear.x = 0.0
-                self.cmd.angular.z = 0.0
-                self.publisher_.publish(self.cmd)
-                self.turtlebot_moving = False
-                self.get_logger().info('Stopped after moving approximately 5 meter')
-                self.meter = True
-                #self.odom_x = 0.0  # Initialize the x position
-                #self.odom_y = 0.0  # Initialize the y position
-                #self.odom_z = 0.0  # Initialize the z position
+            self.cmd.linear.x = 0.0
+            self.cmd.angular.z = 0.0
+            self.publisher_.publish(self.cmd)
+            self.turtlebot_moving = False
+            self.get_logger().info('Stopped after moving approximately 5 meter')
+            self.meter = True
+
         """
-        if self.fiveMeter == True and self.tenDegrees == False:
 
-            if self.odom_z <= 10:
-                self.cmd.linear.z = 0.3
-                self.publisher_.publish(self.cmd)
-                self.get_logger().info('Moving')
+        # 10 DEGREE CODE
+        
+        """
+        # Define the desired angle in radians (10 degrees)
+        desired_angle = 0.053
+        slow_angle = 0.035
 
-            # Check if you've moved approximately 1 meter
-            if self.odom_x >= 10:
+        if self.odom_z <= desired_angle:
+            self.cmd.angular.z = 0.12  # Angular velocity to rotate
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Rotating')
+
+        if self.odom_z <= desired_angle and self.odom_z >= slow_angle:
+            self.cmd.angular.z = 0.03  # Angular velocity to rotate
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('slowing to goal')
+
+            # Check if you've rotated approximately 10 degrees
+        if self.odom_z >= desired_angle:
             # Stop the robot
-                self.cmd.linear.x = 0.0
-                self.cmd.angular.z = 0.0
-                self.publisher_.publish(self.cmd)
-                self.turtlebot_moving = False
-                self.get_logger().info('Stopped after moving approximately 5 meter')
-                self.tenDegrees = True
-                #self.odom_x = 0.0  # Initialize the x position
-                #self.odom_y = 0.0  # Initialize the y position
-                #self.odom_z = 0.0  # Initialize the z position
-                """
+            self.cmd.angular.z = 0.0
+            self.publisher_.publish(self.cmd)
+            self.turtlebot_rotating = False
+            self.get_logger().info('Stopped after rotating approximately 10 degrees')
+            self.degrees = True
+            """
+
+        # 180 DEGREE CODE
+
+        """
+        # Define the desired angle in radians (180 degrees)
+        # Calculate the desired angle (180 degrees in radians)
+          # 180 degrees in radians
+
+    # Calculate the absolute difference between the current and desired angles
+        desired_angle = .9996
+        slow_angle = 0.875
+
+        if self.odom_z <= desired_angle:
+            self.cmd.angular.z = 0.2  # Angular velocity to rotate
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Rotating')
+
+        if self.odom_z <= desired_angle and self.odom_z >= slow_angle:
+            self.cmd.angular.z = 0.03  # Angular velocity to rotate
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('slowing to goal')
+
+            # Check if you've rotated approximately 10 degrees
+        if self.odom_z >= desired_angle:
+            # Stop the robot
+            self.cmd.angular.z = 0.0
+            self.publisher_.publish(self.cmd)
+            self.turtlebot_rotating = False
+            self.get_logger().info('Stopped after rotating approximately 180 degrees')
+            self.degrees = True
+        """
+
+        # 360 DEGREE CODE
+
+        """
+        # Define the desired angle in radians (360 degrees)
+        desired_angle = -0.000000000000000001
+
+        if self.odom_z >= desired_angle:
+            self.cmd.angular.z = 0.2  # Angular velocity to rotate
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Rotating')
+
+            # Check if you've rotated approximately 10 degrees
+        if self.odom_z <= desired_angle:
+            # Stop the robot
+            self.cmd.angular.z = 0.0
+            self.publisher_.publish(self.cmd)
+            self.turtlebot_rotating = False
+            self.get_logger().info('Stopped after rotating approximately 360 degrees')
+            self.degrees = True
+            """
+
+
+
         #Go 0.3 m/s for 1m using position data
 
         #Go .08 m/s for 5m
