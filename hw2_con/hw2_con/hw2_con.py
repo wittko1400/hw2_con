@@ -118,7 +118,7 @@ class RandomWalk(Node):
        
         # 1 METER CODE
            
-        #"""
+        """
         if self.odom_x <= 0.70:
             self.cmd.linear.x = 0.2
             self.publisher_.publish(self.cmd)
@@ -138,11 +138,11 @@ class RandomWalk(Node):
             self.turtlebot_moving = False
             self.get_logger().info('Stopped after moving approximately 1 meter')
             self.meter = True
-        #"""
+        """
 
         # 5 METER CODE
 
-        """
+        #"""
         if self.odom_x <= 4.6:
             self.cmd.linear.x = 0.2
             self.publisher_.publish(self.cmd)
@@ -163,7 +163,7 @@ class RandomWalk(Node):
             self.get_logger().info('Stopped after moving approximately 5 meter')
             self.meter = True
 
-        """
+        #"""
 
         # 10 DEGREE CODE
         
