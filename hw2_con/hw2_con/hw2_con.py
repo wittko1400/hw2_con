@@ -234,8 +234,8 @@ class RandomWalk(Node):
 
 
             # Check if you've rotated approximately 10 degrees
-        elif self.odom_z <= self.desired_angle:
-            if self.odom_z <= self.desired_angle:
+        elif self.odom_z <= desired_angle:
+            if self.odom_z <= desired_angle:
                 self.cmd.angular.z = 0.2  # Angular velocity to rotate
                 self.publisher_.publish(self.cmd)
                 self.get_logger().info('Rotating')
