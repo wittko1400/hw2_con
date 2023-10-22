@@ -225,7 +225,7 @@ class RandomWalk(Node):
 
         #"""
         # Define the desired angle in radians (360 degrees)
-        desired_angle = -0.05
+        desired_angle = -0.10
 
         if self.odom_z >= 0:
             self.cmd.angular.z = 0.2  # Angular velocity to rotate
@@ -235,18 +235,17 @@ class RandomWalk(Node):
 
             # Check if you've rotated approximately 10 degrees
         elif self.odom_z <= desired_angle:
-            if self.odom_z <= desired_angle:
-                self.cmd.angular.z = 0.2  # Angular velocity to rotate
-                self.publisher_.publish(self.cmd)
-                self.get_logger().info('Rotating')
+            self.cmd.angular.z = 0.2  # Angular velocity to rotate
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Rotating')
 
-            else:
-                # Stop the robot
-                self.cmd.angular.z = 0.0
-                self.publisher_.publish(self.cmd)
-                self.turtlebot_rotating = False
-                self.get_logger().info('Stopped after rotating approximately 360 degrees')
-                self.degrees = True
+        else:
+            # Stop the robot
+            self.cmd.angular.z = 0.0
+            self.publisher_.publish(self.cmd)
+            self.turtlebot_rotating = False
+            self.get_logger().info('Stopped after rotating approximately 360 degrees')
+            self.degrees = True
 
             
         #Go 0.3 m/s for 1m using position data
