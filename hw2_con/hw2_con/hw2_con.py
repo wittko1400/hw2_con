@@ -56,8 +56,6 @@ class RandomWalk(Node):
         self.tenDegrees = False
         self.oneEightyDegrees = False
         self.threeSixtyDegrees = False
-        self.flag_turn = False
-        self.desired_angle = -0.00001
         
         # Create a new text file with a unique name based on the current timestamp
         #timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -111,7 +109,7 @@ class RandomWalk(Node):
         return None
    
        
-    def timer_callback(self):
+    def timer_callback(self, flag_turn):
         if (len(self.scan_cleaned)==0):
             self.turtlebot_moving = False
             return
@@ -227,41 +225,30 @@ class RandomWalk(Node):
 
         #"""
         # Define the desired angle in radians (360 degrees)
+        desired_angle = -0.05
 
-    if self.flag_turn == False:
-        if self.odom_z >= self.desired_angle:
+        if self.odom_z >= 0:
             self.cmd.angular.z = 0.2  # Angular velocity to rotate
             self.publisher_.publish(self.cmd)
             self.get_logger().info('Rotating')
 
+
             # Check if you've rotated approximately 10 degrees
-        if self.odom_z <= self.desired_angle:
-            # Stop the robot
-            self.cmd.angular.z = 0.0
-            self.publisher_.publish(self.cmd)
-            self.turtlebot_rotating = False
-            self.get_logger().info('Stopped after rotating approximately 360 degrees')
-            self.degrees = True
-            self.flag_turn = True
+        elif self.odom_z <= self.desired_angle:
+            if self.odom_z >= self.desired_angle:
+                self.cmd.angular.z = 0.2  # Angular velocity to rotate
+                self.publisher_.publish(self.cmd)
+                self.get_logger().info('Rotating')
+
+            else:
+                # Stop the robot
+                self.cmd.angular.z = 0.0
+                self.publisher_.publish(self.cmd)
+                self.turtlebot_rotating = False
+                self.get_logger().info('Stopped after rotating approximately 360 degrees')
+                self.degrees = True
+
             
-    elif self.flag_turn == True:
-        if self.odom_z <= self.desired_angle:
-            self.cmd.angular.z = 0.2  # Angular velocity to rotate
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('Rotating')
-
-            # Check if you've rotated approximately 10 degrees
-        if self.odom_z >= self.desired_angle:
-            # Stop the robot
-            self.cmd.angular.z = 0.0
-            self.publisher_.publish(self.cmd)
-            self.turtlebot_rotating = False
-            self.get_logger().info('Stopped after rotating approximately 360 degrees')
-            self.degrees = True
-            #"""
-
-
-
         #Go 0.3 m/s for 1m using position data
 
         #Go .08 m/s for 5m
