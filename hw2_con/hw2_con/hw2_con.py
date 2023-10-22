@@ -109,7 +109,7 @@ class RandomWalk(Node):
         return None
    
        
-    def timer_callback(self, flag_turn):
+    def timer_callback(self):
         if (len(self.scan_cleaned)==0):
             self.turtlebot_moving = False
             return
