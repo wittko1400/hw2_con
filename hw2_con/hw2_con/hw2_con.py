@@ -56,13 +56,9 @@ class RandomWalk(Node):
         self.tenDegrees = False
         self.oneEightyDegrees = False
         self.threeSixtyDegrees = False
-        self.flag_180 = False
+        self.flag_turn = False
         self.desired_angle = -0.00001
-
-
-
-
-
+        
         # Create a new text file with a unique name based on the current timestamp
         #timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         #file_name = f"robot_log_{timestamp}.txt"
@@ -232,7 +228,7 @@ class RandomWalk(Node):
         #"""
         # Define the desired angle in radians (360 degrees)
 
-    if self.flag_180 == False:
+    if self.flag_turn == False:
         if self.odom_z >= self.desired_angle:
             self.cmd.angular.z = 0.2  # Angular velocity to rotate
             self.publisher_.publish(self.cmd)
@@ -246,9 +242,9 @@ class RandomWalk(Node):
             self.turtlebot_rotating = False
             self.get_logger().info('Stopped after rotating approximately 360 degrees')
             self.degrees = True
-            self.flag_180 = True
+            self.flag_turn = True
             
-    elif self.flag_180 == True:
+    elif self.flag_turn == True:
         if self.odom_z <= self.desired_angle:
             self.cmd.angular.z = 0.2  # Angular velocity to rotate
             self.publisher_.publish(self.cmd)
