@@ -246,7 +246,7 @@ class RandomWalk(Node):
             self.degrees = True
             flag_180 = True
             
-    else if flag_180 == True:
+    elif flag_180 == True:
         if self.odom_z <= desired_angle:
             self.cmd.angular.z = 0.2  # Angular velocity to rotate
             self.publisher_.publish(self.cmd)
