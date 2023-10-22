@@ -244,7 +244,7 @@ class RandomWalk(Node):
             self.turtlebot_rotating = False
             self.get_logger().info('Stopped after rotating approximately 360 degrees')
             self.degrees = True
-            180_flag = True
+            flag_180 = True
             
     if else flag_180 = True:
         if self.odom_z <= desired_angle:
@@ -260,7 +260,7 @@ class RandomWalk(Node):
             self.turtlebot_rotating = False
             self.get_logger().info('Stopped after rotating approximately 360 degrees')
             self.degrees = True
-            180_flag = True
+            flag_180 = True
             #"""
 
 
