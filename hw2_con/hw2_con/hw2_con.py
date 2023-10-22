@@ -56,6 +56,10 @@ class RandomWalk(Node):
         self.tenDegrees = False
         self.oneEightyDegrees = False
         self.threeSixtyDegrees = False
+        self.flag_180 = False
+        self.desired_angle = -0.00001
+
+
 
 
 
@@ -227,40 +231,37 @@ class RandomWalk(Node):
 
         #"""
         # Define the desired angle in radians (360 degrees)
-        flag_180 = False
-        desired_angle = -0.00001
 
-    if flag_180 == False:
-        if self.odom_z >= desired_angle:
+    if self.flag_180 == False:
+        if self.odom_z >= self.desired_angle:
             self.cmd.angular.z = 0.2  # Angular velocity to rotate
             self.publisher_.publish(self.cmd)
             self.get_logger().info('Rotating')
 
             # Check if you've rotated approximately 10 degrees
-        if self.odom_z <= desired_angle:
+        if self.odom_z <= self.desired_angle:
             # Stop the robot
             self.cmd.angular.z = 0.0
             self.publisher_.publish(self.cmd)
             self.turtlebot_rotating = False
             self.get_logger().info('Stopped after rotating approximately 360 degrees')
             self.degrees = True
-            flag_180 = True
+            self.flag_180 = True
             
-    elif flag_180 == True:
-        if self.odom_z <= desired_angle:
+    elif self.flag_180 == True:
+        if self.odom_z <= self.desired_angle:
             self.cmd.angular.z = 0.2  # Angular velocity to rotate
             self.publisher_.publish(self.cmd)
             self.get_logger().info('Rotating')
 
             # Check if you've rotated approximately 10 degrees
-        if self.odom_z >= desired_angle:
+        if self.odom_z >= self.desired_angle:
             # Stop the robot
             self.cmd.angular.z = 0.0
             self.publisher_.publish(self.cmd)
             self.turtlebot_rotating = False
             self.get_logger().info('Stopped after rotating approximately 360 degrees')
             self.degrees = True
-            flag_180 = True
             #"""
 
 
