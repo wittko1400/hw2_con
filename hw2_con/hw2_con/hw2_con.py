@@ -90,6 +90,7 @@ class RandomWalk(Node):
         (posx, posy, posz) = (position.x, position.y, position.z)
         (qx, qy, qz, qw) = (orientation.x, orientation.y, orientation.z, orientation.w)
         self.log_file.write(f"{posx}, {posy}\n")
+        
         #self.get_logger().info('self position: {},{},{}'.format(posx,posy,posz));
         # Create or open the CSV file in write mode
         #with open(csv_file_path, mode='w', newline='') as csv_file:
