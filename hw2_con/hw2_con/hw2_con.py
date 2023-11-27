@@ -11,6 +11,15 @@ from rclpy.qos import ReliabilityPolicy, QoSProfile
 import math, random, time, os, datetime, csv
 
 
+LINEAR_VEL = 0.22
+STOP_DISTANCE = 0.15
+LIDAR_ERROR = 0.05
+LIDAR_AVOID_DISTANCE = 0.8
+SAFE_STOP_DISTANCE = STOP_DISTANCE + LIDAR_ERROR
+RIGHT_SIDE_INDEX = 270
+RIGHT_FRONT_INDEX = 210
+LEFT_FRONT_INDEX= 150
+LEFT_SIDE_INDEX= 90
 # Generate a unique timestamp for the CSV file name
 timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 file_name = f'position_data_{timestamp}.txt'  # Example: position_data_20230927153045.csv
@@ -36,38 +45,29 @@ class RandomWalk(Node):
             QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT))
         self.laser_forward = 0
         self.odom_data = 0
-
-        #initialize the x,y,z positions to be able to access in timer_callback
-        self.odom_x = 0.0  # Initialize the x position
-        self.odom_y = 0.0  # Initialize the y position
-        self.odom_z = 0.0  # Initialize the z position
-
-        self.odom_save_x = 0.0
-        self.odom_save_y = 0.0
-        self.odom_save_z = 0.0
-
-
         timer_period = 0.5
         self.pose_saved=''
         self.cmd = Twist()
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.meter = False
-        self.fiveMeter = False
-        self.tenDegrees = False
-        self.oneEightyDegrees = False
-        self.threeSixtyDegrees = False
-        
+        self.last_turn_time_ns = self.get_clock().now().nanoseconds
+        self.last_turn_time_secs = self.last_turn_time_ns / 1e9
+        self.random_turn_time = 0.0
+        self.stall_start_time = None
+        self.stall_timer = None
+        self.front_lidar_constant_time = None
+
+
         # Create a new text file with a unique name based on the current timestamp
         #timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         #file_name = f"robot_log_{timestamp}.txt"
-       
+        
         # Open the file in write mode and store the file object as an instance variable
         self.log_file = open(file_name, "w")
         self.log_file.write("Robot Log")
         self.log_file.write(f"Timestamp: {timestamp}\n\n")
-        self.log_file.write("Time (s),X Position (m),Y Position (m), Rotate Z (m)\n")
-       
-       
+        self.log_file.write("Time (s),X Position (m),Y Position (m)\n")
+        
+        
     def listener_callback1(self, msg1):
         #self.get_logger().info('scan: "%s"' % msg1.ranges)
         scan = msg1.ranges
@@ -88,171 +88,103 @@ class RandomWalk(Node):
         position = msg2.pose.pose.position
         orientation = msg2.pose.pose.orientation
         (posx, posy, posz) = (position.x, position.y, position.z)
-
-        #fill data to the variables used in timer_callback
-        self.odom_x = posx
-        self.odom_y = posy
-        
-
         (qx, qy, qz, qw) = (orientation.x, orientation.y, orientation.z, orientation.w)
-        self.log_file.write(f"{posx}, {posy}, {qz}\n")
+        self.log_file.write(f"{posx}, {posy}\n")
+        #self.get_logger().info('self position: {},{},{}'.format(posx,posy,posz));
+        # Create or open the CSV file in write mode
+        #with open(csv_file_path, mode='w', newline='') as csv_file:
+            #position = msg2.pose.pose.position
+            # Create a CSV writer object
+            #csv_writer = csv.writer(csv_file)
 
-        self.odom_z= qz
+            # Assuming you have posx, posy, and posz variables
+            #position_data = [position.x, position.y, position.z]
 
-        # Extract yaw angle using the provided code
+            # Write the position data to the CSV file
+            #csv_writer.writerow(position_data)
 
-
-        # Optionally, you can log the position to the console as well
-        self.get_logger().info('self position: {}, {}, {}'.format(posx, posy, qz))
+            # Optionally, you can log the position to the console as well
+        self.get_logger().info('self position: {}, {}, {}'.format(posx, posy, posz))
         # similarly for twist message if you need
         self.pose_saved=position
         return None
-   
-       
+    
+        
     def timer_callback(self):
         if (len(self.scan_cleaned)==0):
             self.turtlebot_moving = False
             return
-       
-        # 1 METER CODE
-           
-        """
-        if self.odom_x <= 0.70:
-            self.cmd.linear.x = 0.2
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('Moving')
-
-        if self.odom_x >= 0.71 and self.odom_x <= 0.94:
-            self.cmd.linear.x = 0.1
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('Moving')
-
-            # Check if you've moved approximately 1 meter
-        if self.odom_x >= 0.95:
-            # Stop the robot
-            self.cmd.linear.x = 0.0
-            self.cmd.angular.z = 0.0
-            self.publisher_.publish(self.cmd)
-            self.turtlebot_moving = False
-            self.get_logger().info('Stopped after moving approximately 1 meter')
-            self.meter = True
-        """
-
-        # 5 METER CODE
-
-        """
-        if self.odom_x <= 4.6:
-            self.cmd.linear.x = 0.2
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('Moving')
-
-        if self.odom_x >= 4.6 and self.odom_x <= 4.95:
-            self.cmd.linear.x = 0.1
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('slowing to goal')
-
-            # Check if you've moved approximately 5 meter
-        if self.odom_x >= 4.95:
-            # Stop the robot
-            self.cmd.linear.x = 0.0
-            self.cmd.angular.z = 0.0
-            self.publisher_.publish(self.cmd)
-            self.turtlebot_moving = False
-            self.get_logger().info('Stopped after moving approximately 5 meter')
-            self.meter = True
-
-        """
-
-        # 10 DEGREE CODE
-        
-        """
-        # Define the desired angle in radians (10 degrees)
-        desired_angle = 0.053
-        slow_angle = 0.035
-
-        if self.odom_z <= desired_angle:
-            self.cmd.angular.z = 0.12  # Angular velocity to rotate
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('Rotating')
-
-        if self.odom_z <= desired_angle and self.odom_z >= slow_angle:
-            self.cmd.angular.z = 0.03  # Angular velocity to rotate
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('slowing to goal')
-
-            # Check if you've rotated approximately 10 degrees
-        if self.odom_z >= desired_angle:
-            # Stop the robot
-            self.cmd.angular.z = 0.0
-            self.publisher_.publish(self.cmd)
-            self.turtlebot_rotating = False
-            self.get_logger().info('Stopped after rotating approximately 10 degrees')
-            self.degrees = True
-            """
-
-        # 180 DEGREE CODE
-
-        """
-        # Define the desired angle in radians (180 degrees)
-        # Calculate the desired angle (180 degrees in radians)
-          # 180 degrees in radians
-
-    # Calculate the absolute difference between the current and desired angles
-        desired_angle = .9996
-        slow_angle = 0.875
-
-        if self.odom_z <= desired_angle:
-            self.cmd.angular.z = 0.2  # Angular velocity to rotate
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('Rotating')
-
-        if self.odom_z <= desired_angle and self.odom_z >= slow_angle:
-            self.cmd.angular.z = 0.03  # Angular velocity to rotate
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('slowing to goal')
-
-            # Check if you've rotated approximately 10 degrees
-        if self.odom_z >= desired_angle:
-            # Stop the robot
-            self.cmd.angular.z = 0.0
-            self.publisher_.publish(self.cmd)
-            self.turtlebot_rotating = False
-            self.get_logger().info('Stopped after rotating approximately 180 degrees')
-            self.degrees = True
-        """
-
-        # 360 DEGREE CODE
-
-        #"""
-        # Define the desired angle in radians (360 degrees)
-        desired_angle = -0.10
-
-        if self.odom_z >= 0:
-            self.cmd.angular.z = 0.2  # Angular velocity to rotate
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('Rotating')
-
-
-            # Check if you've rotated approximately 10 degrees
-        elif self.odom_z <= desired_angle:
-            self.cmd.angular.z = 0.2  # Angular velocity to rotate
-            self.publisher_.publish(self.cmd)
-            self.get_logger().info('Rotating')
-
-        else:
-            # Stop the robot
-            self.cmd.angular.z = 0.0
-            self.publisher_.publish(self.cmd)
-            self.turtlebot_rotating = False
-            self.get_logger().info('Stopped after rotating approximately 360 degrees')
-            self.degrees = True
-
             
-        #Go 0.3 m/s for 1m using position data
-
-        #Go .08 m/s for 5m
+        #left_lidar_samples = self.scan_cleaned[LEFT_SIDE_INDEX:LEFT_FRONT_INDEX]
+        #right_lidar_samples = self.scan_cleaned[RIGHT_FRONT_INDEX:RIGHT_SIDE_INDEX]
+        #front_lidar_samples = self.scan_cleaned[LEFT_FRONT_INDEX:RIGHT_FRONT_INDEX]
         
+        left_lidar_min = min(self.scan_cleaned[LEFT_SIDE_INDEX:LEFT_FRONT_INDEX])
+        right_lidar_min = min(self.scan_cleaned[RIGHT_FRONT_INDEX:RIGHT_SIDE_INDEX])
+        front_lidar_min = min(self.scan_cleaned[LEFT_FRONT_INDEX:RIGHT_FRONT_INDEX])
 
+        #self.get_logger().info('left scan slice: "%s"'%  min(left_lidar_samples))
+        #self.get_logger().info('front scan slice: "%s"'%  min(front_lidar_samples))
+        #self.get_logger().info('right scan slice: "%s"'%  min(right_lidar_samples))
+
+        current_time_ns = self.get_clock().now().nanoseconds                        # get the current time in nanoseconds
+        current_time_secs = current_time_ns / 1e9                                   # convert the current time to seconds
+        time_since_turn = current_time_secs - self.last_turn_time_secs              # calculate the time since the last turn
+        self.random_turn_time = random.randint(2, 5)                                # random turn time between 2 and 5 seconds
+
+        if front_lidar_min < SAFE_STOP_DISTANCE:
+            if self.turtlebot_moving == True:
+                # Halt the robot if it is too close to an obstacle
+                self.cmd.linear.x = 0.0 
+                self.cmd.angular.z = 0.0
+                self.publisher_.publish(self.cmd)
+                self.turtlebot_moving = False
+                self.get_logger().info('Stopping')
+            else:
+                self.get_out_of_stall()     # Get the robot out of the stall/stop
+        elif front_lidar_min < LIDAR_AVOID_DISTANCE:
+                # Turn away from the obstacle
+                self.cmd.linear.x = 0.07 
+                if (right_lidar_min > left_lidar_min):
+                   self.cmd.angular.z = -0.4
+                else:
+                   self.cmd.angular.z = 0.4
+                self.publisher_.publish(self.cmd)
+                self.get_logger().info('Turning')
+                self.turtlebot_moving = True
+        else:
+            # Explore the environment if there is no obstacle
+            self.cmd.linear.x = 0.3
+
+            # Make a random turn within a time interval between 2-5 seconds
+            if time_since_turn > self.random_turn_time:
+                self.cmd.angular.z = random.uniform(-0.9, 0.9)          # random angular velocity between -3 and 3
+                self.last_turn_time_secs = current_time_secs        # reset the timer
+            else:
+                self.cmd.angular.z = 0.0
+            
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Exploring')
+            self.turtlebot_moving = True
+
+        self.get_logger().info('Distance of the obstacle : %f' % front_lidar_min)
+        self.get_logger().info('I receive: "%s"' %
+                               str(self.odom_data))
+        if self.stall == True:
+            self.get_logger().info('Stall reported')
+            self.get_out_of_stall()     # Get the robot out of the stall
+        
+        # Display the message on the console
+        self.get_logger().info('Publishing: "%s"' % self.cmd)
+
+    def get_out_of_stall(self):
+        # If the robot is stopped due to front_lidar_min < SAFE_STOP_DISTANCE, then move out of the stop
+        if self.turtlebot_moving == False:
+            self.cmd.linear.x = -0.4
+            self.cmd.angular.z = random.uniform(-0.6, 0.6)
+            self.publisher_.publish(self.cmd)
+            self.get_logger().info('Backing out of stall')
+            self.turtlebot_moving = True
 
 
 def main(args=None):
